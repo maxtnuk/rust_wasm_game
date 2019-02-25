@@ -1,0 +1,9 @@
+[package]
+name = "web_server"
+version = "0.1.0"
+authors = ["maxtnt <ttg1256@naver.com>"]
+edition = "2018"
+
+[dependencies]
+ws = "0.8.0"
+wasm_games= { path = ".." }

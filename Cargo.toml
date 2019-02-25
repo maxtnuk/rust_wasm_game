@@ -1,0 +1,18 @@
+[package]
+name = "wasm_games"
+version = "0.1.0"
+authors = ["maxtnt <ttg1256@naver.com>"]
+edition = "2018"
+
+[workspace]
+members= [
+    "web_server"
+]
+
+[dependencies]
+serde = "1.0.87"
+serde_derive = "1.0.87"
+bincode = "1.1.1"
+
+
+
