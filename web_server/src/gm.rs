@@ -1,42 +1,42 @@
-use std::collections::{HashMap,HashSet};
+use std::collections::{HashMap};
 use crate::user::Player;
-use wasm_games::{Message,Board,BoardState};
+use wasm_games::{Message,Board,BoardState,GameList,game_board};
 
-pub struct GameManager<T>
-where T: Board{
-    pub room: RoomController<T>
+pub struct GameManager{
+    pub room: RoomController
 }
-impl <T> GameManager<T>
-where T: Board{
+impl GameManager{
     pub fn new() -> Self{
         GameManager{
-            room: RoomController::new::<T>()
+            room: RoomController::new()
         }
     }
 }
-pub struct RoomController<T>
-where T: Board{
-    rooms: HashMap<String,Room<T>>,
+
+pub struct RoomController
+{
+    rooms: HashMap<String,Room>,
     roomindex: HashMap<String,String>
 }
 
-impl <T> RoomController<T>
-where T: Board{
-    fn new() -> Self{
+impl RoomController
+{
+    pub fn new() -> Self{
         RoomController{
             rooms: HashMap::new(),
             roomindex: HashMap::new()
         }
     }
-    fn create(&mut self,players: Vec<Player>){
+    pub fn create(&mut self,players: Vec<Player>,game: GameList){
         let roomid = players.iter().fold(String::new(),|acc,x|{
             acc+&x.to_string()
         });
-        
-        let room = Room::new::<T>(roomid.clone(),players);
+        let game_form=game_board(game);
+
+        let room = Room::new(roomid.clone(),players,Box::new(game_form));
         self.rooms.insert(roomid.clone(),room);
-        self.rooms[roomid].ready();
-        
+        self.rooms[&roomid].ready();
+
         for i in players.iter(){
             self.roomindex.insert(i.to_string(),roomid.clone());
             i.send_msg(Message::Ready);
@@ -47,12 +47,12 @@ where T: Board{
         self.rooms.get(&room_id)
     }
     fn destroy(&mut self,id: String){
-        
+
         for player in self.rooms[id].players.iter(){
             self.roomindex.remove(&player.to_string());
             player.send(Message::Destroy)
         }
-        
+
         self.rooms.remove(id);
     }
     fn gameover(&mut self,room_id: String,winner: Player){
@@ -62,7 +62,7 @@ where T: Board{
             self.roomindex.remove(&player.to_string());
             player.send_msg(Message::Destroy);
         }
-        
+
     }
 }
 enum RoomStatus{
@@ -71,16 +71,17 @@ enum RoomStatus{
     Playing,
     GameOver,
 }
-pub struct Room<T>
-where T: Board{
+pub struct Room
+{
     id: String,
     pub player: Vec<Player>,
     status: RoomStatus,
-    pub board: T
+    pub board: Box<dyn Board>
 }
-impl <T> Room<T>
-where T: Board{
-    fn new(id: String, players: Vec<Player>,board: T)->Self{
+impl Room
+{
+    fn new<'a,T>(id: String, players: Vec<Player>,board: Box<dyn Board>)->Self
+    where T: Board + Clone+'a{
         Room{
             id: id,
             player: players,

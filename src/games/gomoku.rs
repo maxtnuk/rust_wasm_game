@@ -4,15 +4,22 @@ use crate::{BoardState,Board,Input};
 pub struct Gomoku{
     sm: Space
 }
+impl Gomoku{
+    pub fn new() ->Self{
+        Gomoku{
+            sm: Space::new()
+        }
+    }
+}
 impl Board for Gomoku{
     fn input(&mut self, input: Input){
-        
+
     }
     fn update(&mut self){
-        
+
     }
     fn ready(&mut self){
-        
+
     }
     fn gm_state(&self) -> BoardState{
         BoardState::Nothing
@@ -38,18 +45,18 @@ enum CellState{
 type Pos= (usize,usize);
 
 impl Space{
-    
+
     fn get_index(&self,pos: Pos) -> usize{
-        pos.0 + pos.1 * self.size as usize  
+        pos.0 + pos.1 * self.size as usize
     }
-    
+
     fn cell_change(&mut self,pos: Pos,state: CellState){
         let index = self.get_index(pos);
         self.space[index]=state;
     }
-    
+
     fn avail_place(&self,sel: Pos){
-        
+
     }
     fn swap(&mut self){
         self.playerturn[0]=1;
@@ -60,47 +67,45 @@ impl Space{
         let index = self.playerturn[arridx];
         self.players[index].clone()
     }
-    
+
     fn place_stone(&mut self,who: BasePlayer,pos: Pos){
-        
+
     }
 }
 
 impl Space{
-     fn new(size: u32) ->Self{
+     fn new() ->Self{
         Space{
             size: 19,
             space: Vec::new(),
             players: Default::default(),
             stage: 1,
             playerturn: [0,1],
-            point: 0 
+            point: 0
         }
     }
     fn next_round(&mut self){
         let cur_player=self.cur_player();
         match self.stage{
             1 => {
-                
+
             },
             2 => {
-                
+
             },
             3 => {
-                
+
             },
             4 => {
-                
+
             },
             5 => {
-                
+
             },
             _ => {
-                
+
             },
         }
         self.stage+=1;
     }
 }
-
-

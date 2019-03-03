@@ -6,6 +6,7 @@ pub mod games;
 use bincode::{deserialize as bin_de, serialize as bin_ser, Error};
 use serde_derive::{Deserialize, Serialize};
 pub use crate::player::BasePlayer;
+use crate::games::*;
 
 pub trait Board{
     fn input(&mut self, input: Input);
@@ -13,6 +14,7 @@ pub trait Board{
     fn ready(&mut self);
     fn gm_state(&self) -> BoardState;
 }
+#[derive(PartialEq)]
 pub enum BoardState{
     Nothing,
     Turn(BasePlayer),
@@ -26,6 +28,10 @@ pub struct Input{
     name: String,
     content: Message
 }
+#[derive(Serialize, Deserialize,Debug,PartialEq)]
+pub enum GameList{
+    Gomoku,
+}
 
 #[derive(Serialize, Deserialize,Debug,PartialEq)]
 pub enum Message{
@@ -35,10 +41,17 @@ pub enum Message{
     Fail(String),
     Update,
     Login(String),
-    Waiting,
+    Waiting(GameList),
     Disconnect,
     Click(u32,u32),
     Key(Arrow,(u32,u32)),
+}
+pub fn game_board(gm_mode: GameList) -> impl Board{
+    match gm_mode{
+        GameList::Gomoku => {
+            Gomoku::new()
+        }
+    }
 }
 #[derive(Serialize, Deserialize,Debug,PartialEq)]
 pub enum Arrow{

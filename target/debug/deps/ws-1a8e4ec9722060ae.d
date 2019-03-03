@@ -1,0 +1,17 @@
+/home/maxtnt/workspace/rust_wasm_game/target/debug/deps/libws-1a8e4ec9722060ae.rlib: /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/lib.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/communication.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/connection.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/factory.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/frame.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/handler.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/handshake.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/io.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/message.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/protocol.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/result.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/stream.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/util.rs
+
+/home/maxtnt/workspace/rust_wasm_game/target/debug/deps/ws-1a8e4ec9722060ae.d: /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/lib.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/communication.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/connection.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/factory.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/frame.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/handler.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/handshake.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/io.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/message.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/protocol.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/result.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/stream.rs /home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/util.rs
+
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/lib.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/communication.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/connection.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/factory.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/frame.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/handler.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/handshake.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/io.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/message.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/protocol.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/result.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/stream.rs:
+/home/maxtnt/.cargo/registry/src/github.com-1ecc6299db9ec823/ws-0.8.0/src/util.rs:

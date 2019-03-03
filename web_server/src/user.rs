@@ -1,22 +1,23 @@
-use wasm_games::{BasePlayer,Input};
+use wasm_games::{BasePlayer,Input,Message};
 use crate::WebMsg;
-use ws::{Sender,Message};
+use ws::{Sender};
 use std::hash::{Hash,Hasher};
 
-#[derive(Default)]
 pub struct Player{
     info: BasePlayer,
-    soc: Sender
+    soc: Option<Sender>
 }
 impl Player{
     fn new(name: String, soc: Sender) -> Self{
         Player{
             info: BasePlayer::new(name),
-            soc: soc
+            soc: Some(soc)
         }
     }
     pub fn send_msg(&self,msg: Message){
-        self.soc.send(WebMsg(msg));
+        if let Some(soc) = self.soc{
+            soc.send(WebMsg(msg));
+        }
     }
     pub fn get_name(&self)->String{
         self.info.name.clone()
@@ -30,11 +31,21 @@ impl Player{
 }
 impl Hash for Player{
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.soc.connection_id().hash(state);
+        if let Some(soc) = self.soc{
+            soc.token().hash(state);
+        }
     }
 }
 impl ToString for Player{
     fn to_string(&self) -> String{
-        self.soc.connection_id().to_string()
+        self.get_name()
+    }
+}
+impl Default for Player{
+    fn default() -> Player{
+        Player{
+            info: Default::default(),
+            soc: None
+        }
     }
 }
