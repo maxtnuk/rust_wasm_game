@@ -28,7 +28,15 @@ pub struct Input{
     name: String,
     content: Message
 }
-#[derive(Serialize, Deserialize,Debug,PartialEq)]
+impl Input{
+    pub fn new(name: String, content: Message) -> Self{
+        Input {
+            name: name,
+            content: content
+        }
+    }
+}
+#[derive(Serialize, Deserialize,Debug,PartialEq,Clone)]
 pub enum GameList{
     Gomoku,
 }

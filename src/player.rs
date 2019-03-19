@@ -13,6 +13,9 @@ impl BasePlayer{
             gamescore: HashMap::new()
         }
     }
+    pub fn get_name(&self) ->String{
+        self.name.clone()
+    }
 }
 impl PartialEq for BasePlayer {
     fn eq(&self, other: &BasePlayer) -> bool {

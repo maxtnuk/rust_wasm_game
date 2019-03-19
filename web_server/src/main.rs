@@ -3,10 +3,7 @@ pub mod user;
 pub mod lobby;
 
 use wasm_games::Message;
-use wasm_games::games::Gomoku;
 use wasm_games::{serialize, deserialize};
-use wasm_games::Board;
-use std::env;
 use std::sync::{Arc, Mutex};
 use ws::{listen, Handler, Sender, Result, Message as WsMsg, Handshake, CloseCode, Error};
 use user::Player;
@@ -20,21 +17,19 @@ impl Into<WsMsg> for WebMsg {
     }
 }
 type ArcMut<T> = Arc<Mutex<T>>;
-struct Server<T>
-where
-    T: Board,
+struct Server
 {
     out: Sender,
     user: Option<Player>,
-    gmm: ArcMut<GameManager<T>>,
+    gmm: ArcMut<GameManager>,
     lbm: ArcMut<LobbyManager>,
 }
 
-impl<T> Handler for Server<T>
-where
-    T: Board,
+impl Handler for Server
 {
-    fn on_open(&mut self, _: Handshake) -> Result<()> {}
+    fn on_open(&mut self, _: Handshake) -> Result<()> {
+        Ok(())
+    }
 
     fn on_message(&mut self, msg: WsMsg) -> Result<()> {
         if let ws::Message::Binary(buffer) = msg {
@@ -42,58 +37,60 @@ where
 
                 match msg {
                     Message::Ready => {
-                        let gmm = self.gmm.lock().unwrap();
-                        if let Some(user) = self.user {
-                            if let Some(room) = gmm.room.get_room(user.to_string()) {
+                        let mut gmm = self.gmm.lock().unwrap();
+                        if let Some(usr) = self.user.clone() {
+                            if let Some(room) = gmm.room.get_room(usr.to_string()) {
                                 room.ready();
                             }
                         }
-                    }
+                    },
                     Message::Destroy => {
-                        let gmm = self.gmm.lock().unwrap();
-                        let lbm = self.lbm.lock().unwrap();
+                        let mut gmm = self.gmm.lock().unwrap();
+                        let mut lbm = self.lbm.lock().unwrap();
 
-                        if let Some(user) = self.user {
-                            if let Some(room) = gmm.room.get_room(user.to_string()) {
-                                gmm.room.destroy(room.get_id());
-                                lbm.kick(user);
+                        if let Some(usr) = self.user.clone() {
+                            if gmm.room.get_room(usr.to_string()).is_none(){
+                                lbm.kick(&usr);
+                            }else{
+                                let room_name=gmm.room.get_room(usr.to_string()).unwrap().get_id();
+                                gmm.room.destroy(room_name);
                             }
                         }
-                    }
+                    },
                     Message::Update => {
-                        let gmm = self.gmm.lock().unwrap();
-                        if let Some(user) = self.user.unwrap() {
-                            if let Some(room) = gmm.room.get_room(user.to_string()) {
+                        let mut gmm = self.gmm.lock().unwrap();
+                        if let Some(usr) = self.user.clone() {
+                            if let Some(room) = gmm.room.get_room(usr.to_string()) {
                                 room.update();
                             }
                         }
-                    }
+                    },
                     Message::Login(name) => {
                         let lbm = self.lbm.lock().unwrap();
-                        if lbm.check(name) {
+                        if lbm.check(name.clone()) {
                             println!("already exist");
                             self.out.send(WebMsg(
-                                Message::Fail("fail to make user".to_string()),
-                            ))
+                                Message::Fail("fail to make user".to_string())
+                            )).unwrap();
                         } else {
                             let user = Player::new(name.clone(), self.out.clone());
                             user.send_msg(Message::Login(name));
                             self.user = Some(user);
                         }
-                    }
-                    Message::Waiting => {
-                        let lbm = self.lbm.lock().unwrap();
-                        let gmm = self.gmm.lock().unwrap();
-                        if let Some(user) = self.user.unwrap() {
-                            lbm.push(user.clone());
-                            lbm.dispatch(gmm.room);
+                    },
+                    Message::Waiting(game) => {
+                        let mut lbm = self.lbm.lock().unwrap();
+                        let mut gmm = self.gmm.lock().unwrap();
+                        if let Some(usr) = self.user.clone() {
+                            lbm.push(&usr);
+                            lbm.dispatch(&mut gmm.room,game);
                         }
-                    }
+                    },
                     e @ _ => {
-                        let gmm = self.gmm.lock().unwrap();
-                        if let Some(user) = self.user.unwrap() {
-                            if let Some(room) = gmm.room.get_room(user.to_string()) {
-                                let user_input = user.make_input(e);
+                        let mut gmm = self.gmm.lock().unwrap();
+                        if let Some(usr) = self.user.clone() {
+                            if let Some(room) = gmm.room.get_room(self.get_name()) {
+                                let user_input = usr.make_input(e);
                                 room.input(user_input);
                             }
                         }
@@ -119,32 +116,47 @@ where
     }
 
     fn on_close(&mut self, code: CloseCode, reason: &str) {
-        let gmm = self.gmm.lock().unwrap();
-        let lbm = self.lbm.lock().unwrap();
+        let mut gmm = self.gmm.lock().unwrap();
+        let mut lbm = self.lbm.lock().unwrap();
 
         match code {
             CloseCode::Away => {
                 println!("The client is leaving the site.");
                 {
-                    let rmm = gmm.room;
-                    if let Some(room) = gmm.room.get_room(self.user.to_string()) {
-                        rmm.destroy(room.get_id());
-                    }
-                    lbm.kick(self.user.unwrap());
+                    let rmm = &mut gmm.room;
+                    let room_name = if let Some(room) = rmm.get_room(self.get_name()) {
+                        room.get_id()
+                    }else{
+                        "".to_string()
+                    };
+                    rmm.destroy(room_name);
+                    lbm.kick(&self.user.clone().unwrap());
                 }
             }
             _ => println!("The client encountered an error: {}", reason),
         }
     }
 }
+impl Server{
+    fn get_name(&self)->String{
+        match self.user.clone(){
+            Some(who) => {
+                who.to_string()
+            },
+            None =>{
+                "".to_string()
+            }
+        }
+    }
+}
 
 fn main() {
-    let gmm = Mutex::new(GameManager::new::<Gomoku>());
+    let gmm = Mutex::new(GameManager::new());
     let lbm = Mutex::new(LobbyManager::new());
     let rc_gmm = Arc::new(gmm);
     let rc_lbm = Arc::new(lbm);
 
-    listen("127.0.0.1:3012", |out| {
+    listen("0.0.0.0:8080", |out| {
         Server {
             out: out,
             gmm: Arc::clone(&rc_gmm),

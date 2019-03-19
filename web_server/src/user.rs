@@ -3,35 +3,35 @@ use crate::WebMsg;
 use ws::{Sender};
 use std::hash::{Hash,Hasher};
 
+#[derive(PartialEq,Clone)]
 pub struct Player{
     info: BasePlayer,
     soc: Option<Sender>
 }
+
 impl Player{
-    fn new(name: String, soc: Sender) -> Self{
+    pub fn new(name: String, soc: Sender) -> Self{
         Player{
             info: BasePlayer::new(name),
             soc: Some(soc)
         }
     }
     pub fn send_msg(&self,msg: Message){
-        if let Some(soc) = self.soc{
-            soc.send(WebMsg(msg));
+        if let Some(soc) = self.soc.clone(){
+            soc.send(WebMsg(msg)).unwrap();
         }
     }
     pub fn get_name(&self)->String{
         self.info.name.clone()
     }
     pub fn make_input(&self,msg: Message)->Input{
-        Input{
-            name:self.info.name.clone(),
-            content: msg
-        }
+        //need fix
+        Input::new(self.info.get_name(),msg)
     }
 }
 impl Hash for Player{
     fn hash<H: Hasher>(&self, state: &mut H) {
-        if let Some(soc) = self.soc{
+        if let Some(soc) = self.soc.clone(){
             soc.token().hash(state);
         }
     }

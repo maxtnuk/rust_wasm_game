@@ -1,12 +1,37 @@
 use wasm_bindgen::prelude::*;
 use wasm_games::*;
+pub use gl::start;
 
-#[wasm_bindgen]
-extern "C" {
-    fn alert(s: &str);
+pub mod gl;
+
+#[wasm_bindgen(module = "webchat_client")]
+extern {
+    fn send(msg: &[u8]);
+    #[wasm_bindgen(js_name = addMessage)]
+    fn add_message(msg: &str);
 }
 
 #[wasm_bindgen]
-pub fn greet(name: &str) {
-    alert(&format!("Hello, {}!", name));
+extern {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+fn send_message(msg: Message) {
+    // Message serialization should ALWAYS succeed
+    send(&serialize(msg).unwrap());
+}
+#[wasm_bindgen]
+pub fn main() {
+    
+}
+
+#[wasm_bindgen]
+pub fn recv(buffer: &[u8]) {
+    
+}
+
+#[wasm_bindgen]
+pub fn input(msg: &str) {
+    
 }
