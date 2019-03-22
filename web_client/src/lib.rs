@@ -3,6 +3,7 @@ use wasm_games::*;
 pub use gl::start;
 
 pub mod gl;
+pub(crate) mod util;
 
 #[wasm_bindgen(module = "webchat_client")]
 extern {

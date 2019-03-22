@@ -1,7 +1,16 @@
 use wasm_bindgen::prelude::*;
 use js_sys::WebAssembly;
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlProgram, WebGlRenderingContext, WebGlShader};
+use web_sys::{WebGlProgram,WebGl2RenderingContext, WebGlShader};
+use web_sys::console;
+
+
+#[macro_export]
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 #[wasm_bindgen]
 pub fn start() -> Result<(), JsValue> {
@@ -10,63 +19,90 @@ pub fn start() -> Result<(), JsValue> {
     let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
 
     let context = canvas
-        .get_context("webgl")?
+        .get_context("webgl2")?
         .unwrap()
-        .dyn_into::<WebGlRenderingContext>()?;
+        .dyn_into::<WebGl2RenderingContext>()?;
 
     let vert_shader = compile_shader(
         &context,
-        WebGlRenderingContext::VERTEX_SHADER,
-        r#"
-        attribute vec4 position;
+        WebGl2RenderingContext::VERTEX_SHADER,
+        r#"#version 300 es
+        
+        in vec4 a_position;
+        
         void main() {
-            gl_Position = position;
+            gl_Position = a_position;
         }
     "#,
     )?;
     let frag_shader = compile_shader(
         &context,
-        WebGlRenderingContext::FRAGMENT_SHADER,
-        r#"
+        WebGl2RenderingContext::FRAGMENT_SHADER,
+        r#"#version 300 es
+        
+        precision mediump float;
+        
+        out vec4 outColor;
         void main() {
-            gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            outColor = vec4(1, 0, 1.5, 1);
         }
     "#,
     )?;
     let program = link_program(&context, &vert_shader, &frag_shader)?;
     context.use_program(Some(&program));
 
-    let vertices: [f32; 9] = [-0.7, -0.7, 0.0, 0.7, -0.7, 0.0, 0.0, 0.7, 0.0];
-    let memory_buffer = wasm_bindgen::memory()
-        .dyn_into::<WebAssembly::Memory>()?
-        .buffer();
-    let vertices_location = vertices.as_ptr() as u32 / 4;
-    let vert_array = js_sys::Float32Array::new(&memory_buffer)
-        .subarray(vertices_location, vertices_location + vertices.len() as u32);
-
+    let position_att_location = context.get_attrib_location(&program,"a_position") as u32;
     let buffer = context.create_buffer().ok_or("failed to create buffer")?;
-    context.bind_buffer(WebGlRenderingContext::ARRAY_BUFFER, Some(&buffer));
-    context.buffer_data_with_array_buffer_view(
-        WebGlRenderingContext::ARRAY_BUFFER,
-        &vert_array,
-        WebGlRenderingContext::STATIC_DRAW,
-    );
-    context.vertex_attrib_pointer_with_i32(0, 3, WebGlRenderingContext::FLOAT, false, 0, 0);
-    context.enable_vertex_attrib_array(0);
+    context.bind_buffer(WebGl2RenderingContext::ARRAY_BUFFER, Some(&buffer));
+    
+    let positions: [f32; 6] = [
+        0.0,0.0,
+        0.0,0.5,
+        0.7,0.0,
+    ];
+    
+    let memory_buffer = wasm_bindgen::memory()
+    .dyn_into::<WebAssembly::Memory>()?
+    .buffer();
+    
+    let vertices_location = positions.as_ptr() as u32 / 4;    
+    let vert_array = js_sys::Float32Array::new(&memory_buffer)
+        .subarray(vertices_location, vertices_location + positions.len() as u32);
 
-    context.clear_color(0.0, 0.0, 0.0, 1.0);
-    context.clear(WebGlRenderingContext::COLOR_BUFFER_BIT);
+    context.buffer_data_with_array_buffer_view(
+        WebGl2RenderingContext::ARRAY_BUFFER,
+        &vert_array,
+        WebGl2RenderingContext::STATIC_DRAW,
+    );
+    
+    //log!("va: {}",position_att_location);
+    let va=context.create_vertex_array();
+    context.bind_vertex_array(va.as_ref());
+    context.enable_vertex_attrib_array(position_att_location);
+    
+    context.vertex_attrib_pointer_with_i32(
+        position_att_location,
+        2,
+        WebGl2RenderingContext::FLOAT,
+        false,
+        0,
+        0
+    );
+    
+    context.clear_color(0.0, 0.0, 0.0, 0.0);
+    context.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
 
     context.draw_arrays(
-        WebGlRenderingContext::TRIANGLES,
+        WebGl2RenderingContext::TRIANGLES,
         0,
-        (vertices.len() / 3) as i32,
+        3
     );
+    
     Ok(())
 }
 
 pub fn compile_shader(
-    context: &WebGlRenderingContext,
+    context: &WebGl2RenderingContext,
     shader_type: u32,
     source: &str,
 ) -> Result<WebGlShader, String> {
@@ -77,7 +113,7 @@ pub fn compile_shader(
     context.compile_shader(&shader);
 
     if context
-        .get_shader_parameter(&shader, WebGlRenderingContext::COMPILE_STATUS)
+        .get_shader_parameter(&shader, WebGl2RenderingContext::COMPILE_STATUS)
         .as_bool()
         .unwrap_or(false)
     {
@@ -90,7 +126,7 @@ pub fn compile_shader(
 }
 
 pub fn link_program(
-    context: &WebGlRenderingContext,
+    context: &WebGl2RenderingContext,
     vert_shader: &WebGlShader,
     frag_shader: &WebGlShader,
 ) -> Result<WebGlProgram, String> {
@@ -103,7 +139,7 @@ pub fn link_program(
     context.link_program(&program);
 
     if context
-        .get_program_parameter(&program, WebGlRenderingContext::LINK_STATUS)
+        .get_program_parameter(&program, WebGl2RenderingContext::LINK_STATUS)
         .as_bool()
         .unwrap_or(false)
     {
