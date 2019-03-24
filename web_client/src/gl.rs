@@ -1,23 +1,28 @@
-use wasm_bindgen::prelude::*;
-use js_sys::{WebAssembly,Math};
+use js_sys::{WebAssembly};
 use wasm_bindgen::JsCast;
-use web_sys::{WebGlProgram,WebGl2RenderingContext, WebGlShader};
-use web_sys::console;
+use wasm_bindgen::*;
+use crate::util::*;
+use web_sys::{WebGlProgram,WebGl2RenderingContext, WebGlShader,WebGlUniformLocation};
 
-#[macro_export]
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        console::log_1(&format!( $( $t )* ).into());
-    }
+pub fn get_canvas(id: &str)-> Result<WebGl2RenderingContext, js_sys::Object>{
+    let document = web_sys::window().unwrap().document().unwrap();
+    let canvas = document.get_element_by_id(id).unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
+
+    canvas
+        .get_context("webgl2")?
+        .unwrap()
+        .dyn_into::<WebGl2RenderingContext>()
 }
-struct VertiForm{
+
+pub struct VertiForm{
     verties: Vec<f32>,
     size: u32,
     gl: WebGl2RenderingContext,
     program: Option<WebGlProgram>
 }
 impl VertiForm{
-    fn new(gl: WebGl2RenderingContext,data: Vec<f32>,size: u32) -> Self
+    pub fn new(gl: WebGl2RenderingContext,data: Vec<f32>,size: u32) -> Self
     {
         VertiForm{
             verties: data.into(),
@@ -76,10 +81,10 @@ impl VertiForm{
         }
     }
 
-    fn init_program(&mut self)->Result<(), JsValue>{
+    pub fn init_program<F>(&mut self,sourceinit: F)->Result<(), JsValue>
+    where F: Fn() -> (String,String){
         let gl = &self.gl;
-        let vertex_source=include_str!("gl/vertex.glsl");
-        let frag_source=include_str!("gl/frag.glsl");
+        let (vertex_source,frag_source) = sourceinit();
         
         //log!("vs: {:?}",vertex_source);
         //log!("fs: {:?}",frag_source);
@@ -87,19 +92,19 @@ impl VertiForm{
         let vert_shader = Self::compile_shader(
             gl,
             WebGl2RenderingContext::VERTEX_SHADER,
-            vertex_source,
+            vertex_source.as_str(),
         )?;
         let frag_shader = Self::compile_shader(
             gl,
             WebGl2RenderingContext::FRAGMENT_SHADER,
-            frag_source,
+            frag_source.as_str(),
         )?;
         let program = Self::link_program(gl, &vert_shader, &frag_shader)?;
         self.program=Some(program);
         gl.use_program(self.program.as_ref());
         Ok(())
     }
-    fn init_vertex(&self)->Result<(), JsValue>{
+    pub fn init_vertex(&self)->Result<(), JsValue>{
         let gl = &self.gl;
         
         let buffer = gl.create_buffer().ok_or("failed to create buffer")?;
@@ -120,16 +125,19 @@ impl VertiForm{
         );
         Ok(())
     }
-    fn get_attrib(&self,name: &str) -> u32{
+    pub fn get_attrib(&self,name: &str) -> u32{
         self.gl.get_attrib_location(self.program.as_ref().unwrap(),name) as u32
     }
-    fn vertex_data_form(&self)->Result<(), JsValue>{
+    pub fn get_uniform(&self,name: &str) -> Option<WebGlUniformLocation>{
+        self.gl.get_uniform_location(self.program.as_ref().unwrap(),name)
+    }
+    pub fn vertex_data_form(&self,attrib_name: &str)->Result<(), JsValue>{
         let gl = &self.gl;
         
-        let position_att_location = self.get_attrib("a_position");
         let va=gl.create_vertex_array();
-        
         gl.bind_vertex_array(va.as_ref());// this is only for vertex
+        
+        let position_att_location = self.get_attrib(attrib_name);
         
         gl.enable_vertex_attrib_array(position_att_location);
         gl.vertex_attrib_pointer_with_i32(
@@ -142,7 +150,7 @@ impl VertiForm{
         );
         Ok(())
     }
-    fn init_color(&self,color: Vec<f32>)->Result<(), JsValue>{
+    pub fn init_buffer(&self,source: Vec<f32>)->Result<(), JsValue>{
         let gl = &self.gl;
         
         let buffer = gl.create_buffer().ok_or("failed to create buffer")?;
@@ -152,26 +160,26 @@ impl VertiForm{
         .dyn_into::<WebAssembly::Memory>()?
         .buffer();
         
-        let color_location = color.as_ptr() as u32 / 4;    
-        let color_array = js_sys::Float32Array::new(&memory_buffer)
-            .subarray(color_location, color_location + color.len() as u32);
+        let source_location = source.as_ptr() as u32 / 4;    
+        let source_array = js_sys::Float32Array::new(&memory_buffer)
+            .subarray(source_location, source_location + source.len() as u32);
     
         gl.buffer_data_with_array_buffer_view(
             WebGl2RenderingContext::ARRAY_BUFFER,
-            &color_array,
+            &source_array,
             WebGl2RenderingContext::STATIC_DRAW,
         );
         Ok(())
     }
-    fn color_data_form(&self)->Result<(), JsValue>{
+    pub fn attrib_data_form(&self,attrib_name: &str,size: i32)->Result<(), JsValue>{
         let gl = &self.gl;
         
-        let color_att_location = self.get_attrib("a_color");
-        gl.enable_vertex_attrib_array(color_att_location);
+        let attrib_location = self.get_attrib(attrib_name);
+        gl.enable_vertex_attrib_array(attrib_location);
         
         gl.vertex_attrib_pointer_with_i32(
-            color_att_location,
-            4,
+            attrib_location,
+            size,
             WebGl2RenderingContext::FLOAT,
             false,
             0,
@@ -179,13 +187,26 @@ impl VertiForm{
         );
         Ok(())
     }
-    fn draw(&self)->Result<(), JsValue>{
+    pub fn uniform_data_form<F>(&self,uniform_name: &str,custom: F)->Result<(), JsValue>
+    where F: Fn(&WebGl2RenderingContext,WebGlUniformLocation){
+        let gl = &self.gl;
+        
+        let uniform_location = self.get_uniform(uniform_name);
+        match uniform_location {
+            Some(pos) => {
+                custom(gl,pos);
+            },
+            None => {
+                
+            }
+        }
+        Ok(())
+    }
+    pub fn draw(&self)->Result<(), JsValue>{
         let gl = &self.gl; 
         gl.clear_color(0.0, 0.0, 0.0, 0.0);
         gl.clear(WebGl2RenderingContext::COLOR_BUFFER_BIT);
     
-        let matrixlocation = self.gl.get_uniform_location(self.program.as_ref().unwrap(),"u_matrix");
-        let matrix= [0.0,0.0,0.0,0.0];
         // Set the matrix.
         //gl.uniform_matrix2fv_with_f32_array(matrixlocation.as_ref(), false, &matrix);
     
@@ -196,51 +217,4 @@ impl VertiForm{
         );
         Ok(())
     }
-}
-
-#[wasm_bindgen]
-pub fn start() -> Result<(), JsValue> {
-    
-    let document = web_sys::window().unwrap().document().unwrap();
-    let canvas = document.get_element_by_id("inner1").unwrap();
-    let canvas: web_sys::HtmlCanvasElement = canvas.dyn_into::<web_sys::HtmlCanvasElement>()?;
-
-    let context = canvas
-        .get_context("webgl2")?
-        .unwrap()
-        .dyn_into::<WebGl2RenderingContext>()?;
-        
-    let positions: [f32;12] = [
-        -1.0,-1.0,
-        1.0,-1.0,
-        -1.0,1.0,
-        1.0,-1.0,
-        -1.0,1.0,
-        1.0,1.0
-    ];
-    let rgb1 = (Math::random() as f32,Math::random() as f32,Math::random() as f32,1.0);
-    let rgb2 = (Math::random() as f32,Math::random() as f32,Math::random() as f32,1.0);
-    
-    let colors: [f32;24] = [
-        rgb1.0,rgb1.1,rgb1.2,rgb1.3,
-        rgb1.0,rgb1.1,rgb1.2,rgb1.3,
-        rgb1.0,rgb1.1,rgb1.2,rgb1.3,
-        rgb2.0,rgb2.1,rgb2.2,rgb2.3,
-        rgb2.0,rgb2.1,rgb2.2,rgb2.3,
-        rgb2.0,rgb2.1,rgb2.2,rgb2.3
-    ];
-    
-    let mut sample_vert=VertiForm::new(context,positions.to_vec(),2);
-    
-    sample_vert.init_program()?;
-    
-    sample_vert.init_vertex()?;
-    sample_vert.vertex_data_form()?;
-    
-    sample_vert.init_color(colors.to_vec())?;
-    sample_vert.color_data_form()?;
-    
-    sample_vert.draw()?;
-    
-    Ok(())
 }

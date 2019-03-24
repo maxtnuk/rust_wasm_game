@@ -1,9 +1,11 @@
 use wasm_bindgen::prelude::*;
 use wasm_games::*;
-pub use gl::start;
+pub use ggui::gomoku::start;
 
+#[macro_use]
+pub mod util;
 pub mod gl;
-pub(crate) mod util;
+pub mod ggui;
 
 #[wasm_bindgen(module = "webchat_client")]
 extern {
