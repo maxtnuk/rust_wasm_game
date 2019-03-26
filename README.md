@@ -6,7 +6,15 @@ this project is for test_wasm_games
 To Do
 
 - [ ] develope several games
-- [ ] discuss which frontend platform is better( Yew, Seed )
+- [x] discuss which frontend platform is better( Yew, Seed ) ->
+- seed
 - [ ] consider cargo-web ( without npm run )
 - [ ] for fast developing make MAKE file
 
+## Installation
+
+first of all you need cargo-make
+
+    $ cargo install cargo-make
+    
+and we need [NPM](https://www.npmjs.com/get-npm) for running web_client

@@ -1,0 +1,33 @@
+[env]
+WEB_CLIENT= "./web_client"
+
+[tasks.ignore-members]
+workspace = false
+
+[tasks.install_web]
+install_crate = "cargo-web"
+
+[tasks.install_wasm]
+install_crate = "wasm-pack"
+
+[tasks.cd web_client]
+script = [
+'''
+cd ${WEB_CLIENT}
+'''
+]
+
+[tasks.cd www]
+script = [
+'''
+cd ./www
+'''
+]
+
+[tasks.wasm]
+command = "wasm-pack"
+args = ["build"]
+dependencies = ["install_wasm"]
+
+[tasks.wasm_build]
+run_task = ["cd web_client","wasm_build"]
