@@ -1,9 +1,9 @@
 use wasm_bindgen::prelude::*;
 use wasm_games::*;
-pub use ggui::gomoku::start;
+pub use crate::ggui::start_game;
 
 #[macro_use]
-pub mod util;
+pub(crate) mod util;
 pub mod gl;
 pub mod ggui;
 
@@ -22,7 +22,6 @@ extern {
 
 fn send_message(msg: Message) {
     // Message serialization should ALWAYS succeed
-    send(&serialize(msg).unwrap());
 }
 #[wasm_bindgen]
 pub fn main() {
@@ -31,7 +30,12 @@ pub fn main() {
 
 #[wasm_bindgen]
 pub fn recv(buffer: &[u8]) {
-    
+  
+}
+#[wasm_bindgen]
+pub fn gen_jsvalue() -> JsValue{
+    let test = GameList::Gomoku;
+    JsValue::from_serde(&test).unwrap()
 }
 
 #[wasm_bindgen]
