@@ -1,0 +1,11 @@
+[env.development]
+DEV = "TRUE"
+
+[tasks.install-web]
+install_crate = "cargo-web"
+
+[tasks.build]
+command = "cargo"
+args = ["build"]
+
+[tasks.server]

@@ -1,14 +1,14 @@
 pub mod gm;
-pub mod user;
 pub mod lobby;
+pub mod user;
 
-use wasm_games::Message;
-use wasm_games::{serialize, deserialize};
-use std::sync::{Arc, Mutex};
-use ws::{listen, Handler, Sender, Result, Message as WsMsg, Handshake, CloseCode, Error};
-use user::Player;
 use gm::GameManager;
 use lobby::LobbyManager;
+use std::sync::{Arc, Mutex};
+use user::Player;
+use wasm_games::Message;
+use wasm_games::{deserialize, serialize};
+use ws::{listen, CloseCode, Error, Handler, Handshake, Message as WsMsg, Result, Sender};
 
 pub struct WebMsg(Message);
 impl Into<WsMsg> for WebMsg {
@@ -17,16 +17,14 @@ impl Into<WsMsg> for WebMsg {
     }
 }
 type ArcMut<T> = Arc<Mutex<T>>;
-struct Server
-{
+struct Server {
     out: Sender,
     user: Option<Player>,
     gmm: ArcMut<GameManager>,
     lbm: ArcMut<LobbyManager>,
 }
 
-impl Handler for Server
-{
+impl Handler for Server {
     fn on_open(&mut self, _: Handshake) -> Result<()> {
         Ok(())
     }
@@ -34,7 +32,6 @@ impl Handler for Server
     fn on_message(&mut self, msg: WsMsg) -> Result<()> {
         if let ws::Message::Binary(buffer) = msg {
             if let Ok(msg) = deserialize(&buffer) {
-
                 match msg {
                     Message::Ready => {
                         let mut gmm = self.gmm.lock().unwrap();
@@ -43,20 +40,21 @@ impl Handler for Server
                                 room.ready();
                             }
                         }
-                    },
+                    }
                     Message::Destroy => {
                         let mut gmm = self.gmm.lock().unwrap();
                         let mut lbm = self.lbm.lock().unwrap();
 
                         if let Some(usr) = self.user.clone() {
-                            if gmm.room.get_room(usr.to_string()).is_none(){
+                            if gmm.room.get_room(usr.to_string()).is_none() {
                                 lbm.kick(&usr);
-                            }else{
-                                let room_name=gmm.room.get_room(usr.to_string()).unwrap().get_id();
+                            } else {
+                                let room_name =
+                                    gmm.room.get_room(usr.to_string()).unwrap().get_id();
                                 gmm.room.destroy(room_name);
                             }
                         }
-                    },
+                    }
                     Message::Update => {
                         let mut gmm = self.gmm.lock().unwrap();
                         if let Some(usr) = self.user.clone() {
@@ -64,28 +62,28 @@ impl Handler for Server
                                 room.update();
                             }
                         }
-                    },
+                    }
                     Message::Login(name) => {
                         let lbm = self.lbm.lock().unwrap();
                         if lbm.check(name.clone()) {
                             println!("already exist");
-                            self.out.send(WebMsg(
-                                Message::Fail("fail to make user".to_string())
-                            )).unwrap();
+                            self.out
+                                .send(WebMsg(Message::Fail("fail to make user".to_string())))
+                                .unwrap();
                         } else {
                             let user = Player::new(name.clone(), self.out.clone());
                             user.send_msg(Message::Login(name));
                             self.user = Some(user);
                         }
-                    },
+                    }
                     Message::Waiting(game) => {
                         let mut lbm = self.lbm.lock().unwrap();
                         let mut gmm = self.gmm.lock().unwrap();
                         if let Some(usr) = self.user.clone() {
                             lbm.push(&usr);
-                            lbm.dispatch(&mut gmm.room,game);
+                            lbm.dispatch(&mut gmm.room, game);
                         }
-                    },
+                    }
                     e @ _ => {
                         let mut gmm = self.gmm.lock().unwrap();
                         if let Some(usr) = self.user.clone() {
@@ -126,7 +124,7 @@ impl Handler for Server
                     let rmm = &mut gmm.room;
                     let room_name = if let Some(room) = rmm.get_room(self.get_name()) {
                         room.get_id()
-                    }else{
+                    } else {
                         "".to_string()
                     };
                     rmm.destroy(room_name);
@@ -137,15 +135,11 @@ impl Handler for Server
         }
     }
 }
-impl Server{
-    fn get_name(&self)->String{
-        match self.user.clone(){
-            Some(who) => {
-                who.to_string()
-            },
-            None =>{
-                "".to_string()
-            }
+impl Server {
+    fn get_name(&self) -> String {
+        match self.user.clone() {
+            Some(who) => who.to_string(),
+            None => "".to_string(),
         }
     }
 }
@@ -156,12 +150,11 @@ fn main() {
     let rc_gmm = Arc::new(gmm);
     let rc_lbm = Arc::new(lbm);
 
-    listen("0.0.0.0:8080", |out| {
-        Server {
-            out: out,
-            gmm: Arc::clone(&rc_gmm),
-            lbm: Arc::clone(&rc_lbm),
-            user: None,
-        }
-    }).unwrap();
+    listen("0.0.0.0:8080", |out| Server {
+        out: out,
+        gmm: Arc::clone(&rc_gmm),
+        lbm: Arc::clone(&rc_lbm),
+        user: None,
+    })
+    .unwrap();
 }

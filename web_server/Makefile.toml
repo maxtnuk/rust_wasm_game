@@ -1,0 +1,8 @@
+[tasks.build]
+command="cargo"
+args=["build"]
+
+[tasks.server]
+script = [
+    "echo run wasm_server!!!"
+]

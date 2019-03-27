@@ -1,0 +1,17 @@
+[tasks.wasm]
+install_crate = "wasm-pack"
+command = "wasm-pack"
+args = ["build"]
+
+[tasks.wasm-server]
+script=[
+'''
+cd ./www
+npm run start
+'''
+]
+
+[tasks.server]
+dependencies = ["wasm","wasm-server"]
+
+[tasks.build]

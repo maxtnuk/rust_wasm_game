@@ -9,12 +9,22 @@ To Do
 - [x] discuss which frontend platform is better( Yew, Seed ) ->
 - seed
 - [ ] consider cargo-web ( without npm run )
-- [ ] for fast developing make MAKE file
+- [x] for fast developing make MAKE file: complete (cargo make)
+- [ ] develope frontend with seed
 
-## Installation
+## How To use
 
 first of all you need cargo-make
 
     $ cargo install cargo-make
     
-and we need [NPM](https://www.npmjs.com/get-npm) for running web_client
+and also need [NPM](https://www.npmjs.com/get-npm) for running web_client
+
+then run this for build under root folder
+
+    $ cargo make build 
+    
+if you want to run server with npm, run this
+
+    $ cargo make server 
+

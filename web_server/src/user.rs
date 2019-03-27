@@ -1,51 +1,51 @@
-use wasm_games::{BasePlayer,Input,Message};
 use crate::WebMsg;
-use ws::{Sender};
-use std::hash::{Hash,Hasher};
+use std::hash::{Hash, Hasher};
+use wasm_games::{BasePlayer, Input, Message};
+use ws::Sender;
 
-#[derive(PartialEq,Clone)]
-pub struct Player{
+#[derive(PartialEq, Clone)]
+pub struct Player {
     info: BasePlayer,
-    soc: Option<Sender>
+    soc: Option<Sender>,
 }
 
-impl Player{
-    pub fn new(name: String, soc: Sender) -> Self{
-        Player{
+impl Player {
+    pub fn new(name: String, soc: Sender) -> Self {
+        Player {
             info: BasePlayer::new(name),
-            soc: Some(soc)
+            soc: Some(soc),
         }
     }
-    pub fn send_msg(&self,msg: Message){
-        if let Some(soc) = self.soc.clone(){
+    pub fn send_msg(&self, msg: Message) {
+        if let Some(soc) = self.soc.clone() {
             soc.send(WebMsg(msg)).unwrap();
         }
     }
-    pub fn get_name(&self)->String{
+    pub fn get_name(&self) -> String {
         self.info.name.clone()
     }
-    pub fn make_input(&self,msg: Message)->Input{
+    pub fn make_input(&self, msg: Message) -> Input {
         //need fix
-        Input::new(self.info.get_name(),msg)
+        Input::new(self.info.get_name(), msg)
     }
 }
-impl Hash for Player{
+impl Hash for Player {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        if let Some(soc) = self.soc.clone(){
+        if let Some(soc) = self.soc.clone() {
             soc.token().hash(state);
         }
     }
 }
-impl ToString for Player{
-    fn to_string(&self) -> String{
+impl ToString for Player {
+    fn to_string(&self) -> String {
         self.get_name()
     }
 }
-impl Default for Player{
-    fn default() -> Player{
-        Player{
+impl Default for Player {
+    fn default() -> Player {
+        Player {
             info: Default::default(),
-            soc: None
+            soc: None,
         }
     }
 }
