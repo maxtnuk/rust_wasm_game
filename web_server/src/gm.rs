@@ -31,7 +31,7 @@ impl RoomController {
             .fold(String::new(), |acc, x| acc + &x.to_string());
         let game_form = game_board(game);
 
-        let room = Room::new(roomid.clone(), players.clone(), Box::new(game_form));
+        let room = Room::new(roomid.clone(), players.clone(), game_form);
         self.rooms.insert(roomid.clone(), room);
         self.rooms.get_mut(&roomid).unwrap().ready();
 

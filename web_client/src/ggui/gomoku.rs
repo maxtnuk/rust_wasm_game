@@ -3,7 +3,6 @@ use crate::gl::VertiForm;
 use js_sys::Math;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
 pub fn start() -> Result<(), JsValue> {
     let context = get_canvas("inner1").unwrap();
 

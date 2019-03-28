@@ -39,6 +39,7 @@ impl Input{
 #[derive(Serialize, Deserialize,Debug,PartialEq,Clone)]
 pub enum GameList{
     Gomoku,
+    Seed,
 }
 
 #[derive(Serialize, Deserialize,Debug,PartialEq)]
@@ -54,10 +55,13 @@ pub enum Message{
     Click(u32,u32),
     Key(Arrow,(u32,u32)),
 }
-pub fn game_board(gm_mode: GameList) -> impl Board{
+pub fn game_board(gm_mode: GameList) -> Box<dyn Board>{
     match gm_mode{
         GameList::Gomoku => {
-            Gomoku::new()
+            Box::new(Gomoku::new())
+        },
+        GameList::Seed => {
+            Box::new(Seed::new())
         }
     }
 }
