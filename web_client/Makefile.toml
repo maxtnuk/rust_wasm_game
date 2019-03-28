@@ -15,3 +15,16 @@ npm run start
 dependencies = ["wasm","wasm-server"]
 
 [tasks.build]
+
+[tasks.init_www]
+script=[
+'''
+npm init wasm-app www
+cd ./pkg
+npm link
+cd ..
+cd ./www
+npm link ${CARGO_MAKE_CRATE_NAME}
+'''
+]
+dependencies = ["wasm"]

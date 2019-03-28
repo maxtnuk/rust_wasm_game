@@ -9,3 +9,5 @@ command = "cargo"
 args = ["build"]
 
 [tasks.server]
+
+[tasks.wasm]

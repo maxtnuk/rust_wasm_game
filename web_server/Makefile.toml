@@ -6,3 +6,5 @@ args=["build"]
 script = [
     "echo run wasm_server!!!"
 ]
+
+[tasks.wasm]
