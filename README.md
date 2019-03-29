@@ -10,6 +10,7 @@ To Do
 - [ ] consider cargo-web ( without npm run )
 - [x] for fast developing make MAKE file: complete (cargo make)
 - [ ] develope frontend with seed -> there is macro error
+- [ ] learn about webgl 
 
 ## How To use
 
